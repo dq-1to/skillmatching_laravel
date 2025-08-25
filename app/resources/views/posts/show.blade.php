@@ -15,6 +15,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="mb-0">{{ $post->title }}</h2>
+                        @include('partials.bookmark-button', ['post' => $post])
                     </div>
                     <div class="card-body">
                         <!-- 画像 -->

@@ -42,6 +42,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/mypage/profile', 'ProfileController@destroy')->name('profile.destroy');
 });
 
+// ブックマーク関連
+Route::middleware('auth')->group(function () {
+    // 追加: 非同期APIっぽくJSONレスポンスを返す
+    Route::post('/bookmarks/{post}', 'BookmarkController@store')->name('bookmarks.store');
+    Route::delete('/bookmarks/{post}', 'BookmarkController@destroy')->name('bookmarks.destroy');
+});
+
 Auth::routes();
 
 // 管理者

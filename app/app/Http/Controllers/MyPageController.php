@@ -30,12 +30,15 @@ class MyPageController extends Controller
             ->where('del_flag', 0)
             ->latest()->take(10)->get();
 
-        // ④ブックマーク（未実装なら空でOK／実装済みなら書き換え）
-        // 例：User hasManyThrough or belongsToMany Posts via bookmarks
-        $bookmarkedPosts = collect(); // とりあえず空
-        // 実装済みなら例：
-        // $bookmarkedPosts = auth()->user()->bookmarks()
-        //     ->with('post')... or posts()->latest()->take(10)->get();
+        $user = $request->user();
+
+        // ④ ブックマーク（最新10件）
+        $bookmarkedPosts = $user->bookmarks()                // posts への belongsToMany
+            ->where('posts.del_flag', 0)                     // 論理削除除外
+            ->with('user')                                   // 任意：投稿者名を使うなら
+            ->orderBy('bookmarks.created_at', 'desc')        // ← pivot のタイムスタンプで新しい順
+            ->take(10)
+            ->get();
 
         return view('mypage.show', compact(
             'myPosts','sentRequests','receivedRequests','bookmarkedPosts'

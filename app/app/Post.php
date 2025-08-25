@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Post extends Model
 {
+
+    // フィルター
     protected $fillable = [
         'user_id',
         'title',
@@ -16,14 +18,22 @@ class Post extends Model
         'del_flag', 
     ];
 
+    // キャスト
     protected $casts = [
         'price'    => 'integer',
         'del_flag' => 'boolean', // tinyint(1)をboolとして扱う
     ];
 
+    // ユーザーを取得
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // ブックマークしているユーザーを取得
+    public function bookmarkedBy()
+    {
+        return $this->belongsToMany(User::class, 'bookmarks')->withTimestamps();
     }
 
     /** 検索スコープ */

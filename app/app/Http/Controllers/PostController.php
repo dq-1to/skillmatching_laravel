@@ -9,16 +9,28 @@ class PostController extends Controller
 {
     public function index(Request $request)
     {
-        $posts = Post::query()
+        $q = Post::query()
+            ->with(['user'])                 // N+1対策（任意）
+            ->withCount('bookmarkedBy')      // カウントをまとめて取得（任意）
             ->titleLike($request->input('title'))
             ->freeword($request->input('q'))
             ->priceMin($request->input('min'))
             ->priceMax($request->input('max'))
-            ->where('del_flag', 0) // 論理削除されていないものだけ
-            ->orderBy('created_at', 'desc')
+            ->where('del_flag', 0);
+    
+        // ★ ブックマークのみ表示（?bookmarked=1 のとき）
+        if ($request->boolean('bookmarked') && auth()->check()) {
+
+            $q->whereHas('bookmarkedBy', function ($sub) {
+                $sub->where('users.id', auth()->id());
+            });
+
+        }
+    
+        $posts = $q->orderBy('created_at', 'desc')
             ->paginate(12)
             ->appends($request->query());
-        
+    
         return view('posts.index', compact('posts'));
     }
 

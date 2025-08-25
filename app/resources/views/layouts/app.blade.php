@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,6 +20,7 @@
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 </head>
+
 <body>
     <div id="app">
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
@@ -26,7 +28,9 @@
                 <a class="navbar-brand" href="{{ route('home') }}">
                     {{ config('app.name', 'Laravel') }}
                 </a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -60,7 +64,8 @@
                             @endif
                         @else
                             <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
                                     {{ Auth::user()->name }} <span class="caret"></span>
                                 </a>
 
@@ -72,13 +77,13 @@
                                         <a class="dropdown-item" href="{{ route('mypage.show') }}">マイページ</a>
                                         <div class="dropdown-divider"></div>
                                     @endif
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                       onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
+                                    <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();
+                                                         document.getElementById('logout-form').submit();">
                                         {{ __('Logout') }}
                                     </a>
 
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                        style="display: none;">
                                         @csrf
                                     </form>
                                 </div>
@@ -93,5 +98,57 @@
             @yield('content')
         </main>
     </div>
+    {{-- 非同期処理 --}}
+    <script>
+        document.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.js-bookmark-btn');
+            if (!btn) return;
+
+            @if(!auth()->check())
+                // 未ログインならログインへ
+                window.location.href = "{{ route('login') }}";
+                return;
+            @endif
+
+  const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const postId = btn.dataset.postId;
+            const isBookmarked = btn.dataset.bookmarked === '1';
+
+            const url = isBookmarked
+                ? "{{ url('/bookmarks') }}/" + postId
+                : "{{ url('/bookmarks') }}/" + postId;
+
+            const options = {
+                method: isBookmarked ? 'DELETE' : 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                }
+            };
+
+            btn.disabled = true;
+            try {
+                const res = await fetch(url, options);
+                const data = await res.json();
+
+                if (data.ok) {
+                    btn.dataset.bookmarked = data.bookmarked ? '1' : '0';
+                    btn.classList.toggle('btn-warning', data.bookmarked);
+                    btn.classList.toggle('btn-outline-warning', !data.bookmarked);
+
+                    const cnt = btn.querySelector('.js-bookmark-count');
+                    if (cnt) cnt.textContent = data.count;
+                } else {
+                    alert('更新に失敗しました');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('通信エラーが発生しました');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
 </body>
+
 </html>
