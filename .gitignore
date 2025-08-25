@@ -2,4 +2,4 @@ db/*
 !db/.gitkeep
 
 export.sql
-phpmyadmin/sessions/
+phpmyadmin/sessions/.env

@@ -1,12 +1,33 @@
-/node_modules
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
+# 環境ごとの設定ファイル
 .env
 .env.backup
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
+
+# phpMyAdmin のセッションや一時ファイル
+phpmyadmin/
+
+# DB データ
+db/
+!db/.gitkeep
+
+# Laravel のストレージ（キャッシュやログ）
+storage/
+!storage/.gitignore
+
+# Laravel vendor
+/vendor
+
+# Node / Frontend
+/node_modules
 npm-debug.log
 yarn-error.log
+
+# Laravel public
+/public/hot
+/public/storage
+
+# PHPUnit
+.phpunit.result.cache
+
+# Homestead / Vagrant
+Homestead.json
+Homestead.yaml

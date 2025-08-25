@@ -64,16 +64,17 @@
                                         </a>
                                     @endif
 
+                                    <!-- 依頼作成ボタン（投稿者以外のみ表示） -->
                                     @if(auth()->id() !== $post->user_id)
                                         <a href="{{ route('requests.create', ['post' => $post->id]) }}" class="btn btn-primary">
                                             <i class="fas fa-plus"></i> 依頼を作成
                                         </a>
                                     @endif
 
-                                    <!-- 違反報告ボタン（準備中） -->
-                                    <button type="button" class="btn btn-danger" disabled>
-                                        <i class="fas fa-flag"></i> 違反報告（準備中）
-                                    </button>
+                                    <!-- 違反報告ボタン -->
+                                    <a href="{{ route('reports.create', ['post' => $post->id]) }}" class="btn btn-danger">
+                                        違反報告
+                                    </a>
                                 @else
                                     <!-- 未ログイン時はログインページへ誘導 -->
                                     <div class="alert alert-info">

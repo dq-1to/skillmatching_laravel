@@ -27,7 +27,7 @@
     @if($posts->count() > 0)
       @foreach($posts as $post)
         <div class="card mb-2">
-          <div class="card-body d-flex">
+          <div class="card-body d-flex justify-content-between">
             {{-- 画像があればサムネ表示 --}}
             @if($post->image)
               <img src="{{ asset('storage/' . $post->image) }}" alt="投稿画像" class="mr-3"
@@ -35,27 +35,10 @@
             @endif
 
             <div>
-              <h5 class="card-title">
-                <a href="{{ route('posts.show', $post) }}">{{ $post->title }}</a>
-              </h5>
-              @foreach($posts as $post)
-                <div class="card mb-2">
-                  <div class="card-body d-flex justify-content-between">
-                    <div>
-                      <h5><a href="{{ route('posts.show', $post) }}">{{ $post->title }}</a></h5>
-                      <p class="mb-0">{{ Str::limit($post->content, 100) }}</p>
-                    </div>
-                    @include('partials.bookmark-button', ['post' => $post])
-                  </div>
-                </div>
-              @endforeach
-              <div class="text-muted">
-                ¥{{ number_format($post->price) }} |
-                投稿者: {{ $post->user->name ?? 'Unknown' }} |
-                {{ $post->created_at->format('Y-m-d H:i') }}
-              </div>
-              <p class="mb-0">{{ \Illuminate\Support\Str::limit($post->content, 120) }}</p>
+              <h5><a href="{{ route('posts.show', $post) }}">{{ $post->title }}</a></h5>
+              <p class="mb-0">{{ Str::limit($post->content, 100) }}</p>
             </div>
+            @include('partials.bookmark-button', ['post' => $post])
           </div>
         </div>
       @endforeach

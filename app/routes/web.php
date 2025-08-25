@@ -49,12 +49,26 @@ Route::middleware('auth')->group(function () {
     Route::delete('/bookmarks/{post}', 'BookmarkController@destroy')->name('bookmarks.destroy');
 });
 
+// ユーザー側（作成・閲覧は要ログイン）
+Route::middleware('auth')->group(function () {
+    Route::get('/reports/create', 'ReportController@create')->name('reports.create'); // ?post=ID
+    Route::post('/reports', 'ReportController@store')->name('reports.store');
+    Route::get('/reports/{report}', 'ReportController@show')->name('reports.show'); // 自分が出した通報のみ参照
+});
+
 Auth::routes();
 
-// 管理者
+// 管理者側（すべての管理者機能を統合）
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/dashboard', 'AdminController@index')->name('admin.dashboard');
-    Route::get('/userlist', 'AdminController@userlist')->name('admin.userlist');
-    Route::get('/postslist', 'AdminController@postslist')->name('admin.postslist');
+    // ダッシュボード・ユーザー管理・投稿管理
+    Route::get('/admin/dashboard', 'AdminController@index')->name('admin.dashboard');
+    Route::get('/admin/userlist', 'AdminController@userlist')->name('admin.userlist');
+    Route::get('/admin/postslist', 'AdminController@postslist')->name('admin.postslist');
+    
+    // 通報管理
+    Route::get('/admin/reports', 'Admin\\ReportController@index')->name('admin.reports.index');
+    Route::get('/admin/reports/{report}', 'Admin\\ReportController@show')->name('admin.reports.show');
+    Route::put('/admin/reports/{report}', 'Admin\\ReportController@update')->name('admin.reports.update');   // ステータス変更
+    Route::delete('/admin/reports/{report}', 'Admin\\ReportController@destroy')->name('admin.reports.destroy'); // del_flag=1
 });
 

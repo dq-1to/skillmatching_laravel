@@ -30,7 +30,7 @@ class LoginController extends Controller
     protected function authenticated(Request $request, User $user)
     {
         if ((int) $user->role === 1) {
-            return redirect()->route('admin.dashboard'); // 管理者
+            return redirect()->route('admin.dashboard'); // 管理者は管理者ダッシュボードに
         }
         return redirect('/'); // 一般ユーザーはメインページ（投稿一覧）に
     }
