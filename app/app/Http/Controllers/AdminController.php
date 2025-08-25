@@ -1,38 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+// app/Http/Controllers/Admin/DashboardController.php
+namespace App\Http\Controllers\Admin;
 
-use App\User;
+use App\Http\Controllers\Controller;
 use App\Post;
-use Illuminate\Http\Request;
+use App\User;
+use App\Report;
 
-class AdminController extends Controller
+class DashboardController extends Controller
 {
-    public function __construct()
-    {
-        // ミドルウェアはルートレベルで適用済み
-    }
-
     public function index()
     {
-        $userCount = User::where('del_flag', 0)->count();
-        $postCount = Post::where('del_flag', 0)->count();
-
-        
-        return view('admin.dashboard', compact('userCount', 'postCount'));
-    }
-
-    public function userlist()
-    {
-        $users = User::where('del_flag', 0)->paginate(20);
-        
-        return view('admin.userlist', compact('users'));
-    }
-
-    public function postslist()
-    {
-        $posts = Post::where('del_flag', 0)->with('user')->paginate(20);
-        
-        return view('admin.postslist', compact('posts'));
+        return view('admin.dashboard'); // resources/views/admin/dashboard.blade.php
     }
 }

@@ -12,15 +12,15 @@ class Post extends Model
     protected $fillable = [
         'user_id',
         'title',
-        'content', 
+        'content',
         'price',
-        'image', 
-        'del_flag', 
+        'image',
+        'del_flag',
     ];
 
     // キャスト
     protected $casts = [
-        'price'    => 'integer',
+        'price' => 'integer',
         'del_flag' => 'boolean', // tinyint(1)をboolとして扱う
     ];
 
@@ -47,7 +47,7 @@ class Post extends Model
         return $search
             ? $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('content', 'like', "%{$search}%"); // ← body→content
+                    ->orWhere('content', 'like', "%{$search}%"); // ← body→content
             })
             : $query;
     }
@@ -65,10 +65,14 @@ class Post extends Model
     public function scopeByCategory($query, $category)
     {
         switch ($category) {
-            case 'low':    return $query->where('price', '<=', 1000);
-            case 'medium': return $query->whereBetween('price', [1001, 5000]);
-            case 'high':   return $query->where('price', '>', 5000);
-            default:       return $query;
+            case 'low':
+                return $query->where('price', '<=', 1000);
+            case 'medium':
+                return $query->whereBetween('price', [1001, 5000]);
+            case 'high':
+                return $query->where('price', '>', 5000);
+            default:
+                return $query;
         }
     }
 
@@ -84,13 +88,32 @@ class Post extends Model
 
     public function scopeByDateRange($query, $startDate, $endDate)
     {
-        if ($startDate) $query->where('created_at', '>=', $startDate);
-        if ($endDate)   $query->where('created_at', '<=', $endDate);
+        if ($startDate)
+            $query->where('created_at', '>=', $startDate);
+        if ($endDate)
+            $query->where('created_at', '<=', $endDate);
         return $query;
     }
 
     // 自分の投稿を取得
-    public function scopeMine($q, $userId) {
+    public function scopeMine($q, $userId)
+    {
         return $q->where('user_id', $userId);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(\App\Report::class);
+    }
+
+    public function scopeAlive($q)
+    {
+        return $q->where('del_flag', 0);
+    }
+
+    // 停止/公開切替に使う（del_flag=0:公開, 1:停止）
+    public function scopeStopped($q)
+    {
+        return $q->where('del_flag', 1);
     }
 }

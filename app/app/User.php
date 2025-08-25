@@ -17,7 +17,12 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name','email','password','icon','role','del_flag'
+        'name',
+        'email',
+        'password',
+        'icon',
+        'role',
+        'del_flag'
     ];
 
     /**
@@ -26,7 +31,8 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     /**
@@ -47,6 +53,28 @@ class User extends Authenticatable
     public function bookmarks()
     {
         return $this->belongsToMany(Post::class, 'bookmarks')->withTimestamps();
+    }
+
+    // 自分の「投稿」に対する違反報告（ユーザー違反数として扱う）
+    public function postReports()
+    {
+        return $this->hasManyThrough(
+            \App\Report::class,
+            \App\Post::class, // through: Post
+            'user_id',     // Post 外部キー -> users.id
+            'post_id',     // Report 外部キー -> posts.id
+            'id',          // users.id
+            'id'           // posts.id
+        );
+    }
+
+    public function scopeAlive($q)
+    {
+        return $q->where('del_flag', 0);
+    }
+    public function scopeStopped($q)
+    {
+        return $q->where('del_flag', 1);
     }
 
 

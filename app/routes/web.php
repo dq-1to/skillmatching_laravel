@@ -56,19 +56,40 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/{report}', 'ReportController@show')->name('reports.show'); // 自分が出した通報のみ参照
 });
 
-Auth::routes();
+// カスタムパスワードリセットルート
+Route::get('/password/reset', 'Auth\CustomPasswordResetController@showResetForm')->name('password.request');
+Route::post('/password/generate-link', 'Auth\CustomPasswordResetController@generateResetLink')->name('password.generate.link');
+Route::get('/password/reset/redirect', 'Auth\CustomPasswordResetController@redirectToReset')->name('password.reset.redirect');
 
-// 管理者側（すべての管理者機能を統合）
-Route::middleware(['auth', 'admin'])->group(function () {
-    // ダッシュボード・ユーザー管理・投稿管理
-    Route::get('/admin/dashboard', 'AdminController@index')->name('admin.dashboard');
-    Route::get('/admin/userlist', 'AdminController@userlist')->name('admin.userlist');
-    Route::get('/admin/postslist', 'AdminController@postslist')->name('admin.postslist');
+// 標準の認証ルート（パスワードリセット以外）
+Route::get('login', 'Auth\LoginController@showLoginForm')->name('login');
+Route::post('login', 'Auth\LoginController@login');
+Route::post('logout', 'Auth\LoginController@logout')->name('logout');
+Route::get('register', 'Auth\RegisterController@showRegistrationForm')->name('register');
+Route::post('register', 'Auth\RegisterController@register');
+Route::get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
+Route::post('password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
+Route::get('password/confirm', 'Auth\ConfirmPasswordController@showConfirmForm')->name('password.confirm');
+Route::post('password/confirm', 'Auth\ConfirmPasswordController@confirm');
+Route::get('email/verify', 'Auth\VerificationController@show')->name('verification.notice');
+Route::get('email/verify/{id}/{hash}', 'Auth\VerificationController@verify')->name('verification.verify');
+Route::post('email/verification-notification', 'Auth\VerificationController@resend')->name('verification.resend');
+
+// 管理者用ルート
+Route::prefix('admin')->middleware(['auth','admin'])->name('admin.')->group(function () {
+    Route::get('/dashboard', 'Admin\DashboardController@index')->name('dashboard');
+
+    // ユーザー管理・投稿管理
+    Route::get('/userlist',  'Admin\UserListController@index')->name('userlist');
+    Route::get('/postslist', 'Admin\PostListController@index')->name('postslist');
     
-    // 通報管理
-    Route::get('/admin/reports', 'Admin\\ReportController@index')->name('admin.reports.index');
-    Route::get('/admin/reports/{report}', 'Admin\\ReportController@show')->name('admin.reports.show');
-    Route::put('/admin/reports/{report}', 'Admin\\ReportController@update')->name('admin.reports.update');   // ステータス変更
-    Route::delete('/admin/reports/{report}', 'Admin\\ReportController@destroy')->name('admin.reports.destroy'); // del_flag=1
-});
+    // 投稿・ユーザーの停止/解除
+    Route::put('/posts/{post}/toggle', 'Admin\PostListController@toggle')->name('posts.toggle');
+    Route::put('/users/{user}/toggle', 'Admin\UserListController@toggle')->name('users.toggle');
 
+    // 通報管理
+    Route::get('/reports',            'Admin\ReportController@index')->name('reports.index');
+    Route::get('/reports/{report}',   'Admin\ReportController@show')->name('reports.show');
+    Route::put('/reports/{report}',   'Admin\ReportController@update')->name('reports.update');
+    Route::delete('/reports/{report}','Admin\ReportController@destroy')->name('reports.destroy');
+});
