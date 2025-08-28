@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Post;
 use Illuminate\Http\Request;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 
 class PostController extends Controller
 {
@@ -48,20 +50,11 @@ class PostController extends Controller
         return view('posts.show', compact('post'));
     }
 
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        $data = $this->validated($request);
-        $data['user_id'] = auth()->id();
-        $data['del_flag'] = 0;
-
-        // 画像アップロード処理
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('posts', 'public');
-        }
-
-        Post::create($data);
-
-        return redirect()->route('posts.index')->with('success', '投稿が作成されました');
+        $data = $request->validated() + ['user_id' => auth()->id()];
+        \App\Post::create($data);
+        return redirect()->route('posts.index')->with('success', '投稿を作成しました。');
     }
 
     public function edit(Post $post)
@@ -70,18 +63,10 @@ class PostController extends Controller
         return view('posts.edit', compact('post'));
     }
 
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, \App\Post $post)
     {
-        $this->authorize('update', $post);
-        $data = $this->validated($request);
-
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('posts', 'public');
-        }
-
-        $post->update($data);
-
-        return redirect()->route('posts.index')->with('success', '投稿が更新されました');
+        $post->update($request->validated());
+        return redirect()->route('posts.show', $post)->with('success', '投稿を更新しました。');
     }
 
     public function destroy(Post $post)

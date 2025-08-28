@@ -1,92 +1,144 @@
 @extends('layouts.app')
+
 @section('content')
-    <div class="container">
-        <h1>依頼詳細</h1>
-
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                    <span
-                        class="badge badge-{{ [0 => 'secondary', 1 => 'warning', 2 => 'success'][$req->status] ?? 'secondary' }}">
-                        {{ [0 => '掲載中', 1 => '進行中', 2 => '完了'][$req->status] ?? '掲載中' }}
-                    </span>
-                </div>
-                <small class="text-muted">{{ $req->created_at->format('Y-m-d H:i') }}</small>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- 見出し -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url()->previous() }}" class="btn btn-outline-secondary me-3">
+                    戻る
+                </a>
+                <h1 class="h2 fw-bold mb-0">依頼詳細</h1>
             </div>
 
-            <div class="card-body">
-                <div class="mb-2">
-                    <strong>対象投稿：</strong>
-                    @if($req->post)
-                        <a href="{{ route('posts.show', $req->post) }}">{{ $req->post->title }}</a>
-                        <span class="text-muted small">（投稿者: {{ optional($req->post->user)->name ?? 'Unknown' }}）</span>
-                    @else
-                        <span class="text-muted">（削除済み）</span>
-                    @endif
-                </div>
+            @if(session('success'))
+                <div class="alert alert-success mb-4">{{ session('success') }}</div>
+            @endif
 
-                <div class="mb-3">
-                    <strong>依頼者：</strong> {{ optional($req->user)->name ?? 'Unknown' }}
-                </div>
-
-                <div class="mb-3">
-                    <strong>依頼内容</strong>
-                    <p class="mt-2 mb-0">{{ $req->content }}</p>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-4"><strong>電話</strong><br>{{ $req->tel ?? '-' }}</div>
-                    <div class="col-md-4"><strong>メール</strong><br>{{ $req->email }}</div>
-                    <div class="col-md-4">
-                        <strong>納期</strong><br>{{ $req->due_date ? \Carbon\Carbon::parse($req->due_date)->format('Y-m-d') : '-' }}
+            <!-- 依頼詳細カード -->
+            <div class="card border">
+                <div class="card-header bg-white border-bottom py-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center text-muted small">
+                            <span>作成日: {{ $req->created_at->format('Y年m月d日 H:i') }}</span>
+                        </div>
+                        <!-- ステータス表示（右上） -->
+                        <div>
+                            <span class="badge bg-{{ [0 => 'secondary', 1 => 'warning', 2 => 'success'][$req->status] ?? 'secondary' }} px-3 py-2">
+                                {{ [0 => '掲載中', 1 => '進行中', 2 => '完了'][$req->status] ?? '掲載中' }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                @auth
-                    @php
-                        $isRequester = (int) $req->user_id === (int) auth()->id();     // 依頼者本人？
-                        $isRecipient = $req->post && (int) $req->post->user_id === (int) auth()->id(); // 受信者（投稿者）？
-                      @endphp
+                <div class="card-body p-4">
+                    <!-- 対象投稿 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-2">対象投稿</h5>
+                        @if($req->post)
+                            <div class="bg-light p-3">
+                                <a href="{{ route('posts.show', $req->post) }}" class="text-decoration-none">
+                                    {{ $req->post->title }}
+                                </a>
+                                <div class="text-muted small mt-1">
+                                    投稿者: {{ optional($req->post->user)->name ?? 'Unknown' }}
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-light p-3 text-muted">（削除済み）</div>
+                        @endif
+                    </div>
 
-                    {{-- 受信者はステータス更新、依頼者は編集/削除を表示 --}}
-                    @if($isRecipient)
-                        <hr>
-                        <form method="POST" action="{{ route('requests.update', $req) }}" class="form-inline">
-                            @csrf @method('PUT')
-                            <label class="mr-2 mb-2">ステータス更新</label>
-                            <select name="status" class="form-control mr-2 mb-2" required>
-                                <option value="0" {{ $req->status == 0 ? 'selected' : '' }}>掲載中</option>
-                                <option value="1" {{ $req->status == 1 ? 'selected' : '' }}>進行中</option>
-                                <option value="2" {{ $req->status == 2 ? 'selected' : '' }}>完了</option>
-                            </select>
-                            <button class="btn btn-primary mb-2">更新</button>
-                        </form>
-                    @endif
-
-                    @if($isRequester)
-                        <hr>
-                        <div class="d-flex">
-                            <a href="{{ route('requests.edit', $req) }}" class="btn btn-warning mr-2">
-                                <i class="fas fa-edit"></i> 依頼を編集
-                            </a>
-
-                            <form method="POST" action="{{ route('requests.destroy', $req) }}"
-                                onsubmit="return confirm('本当に削除しますか？');" class="d-inline">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger">
-                                    <i class="fas fa-trash-alt"></i> 依頼を削除
-                                </button>
-                            </form>
+                    <!-- 依頼者 -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-2">依頼者</h5>
+                        <div class="bg-light p-3">
+                            {{ optional($req->user)->name ?? 'Unknown' }}
                         </div>
-                    @endif
-                @endauth
+                    </div>
+
+                    <!-- 依頼内容（メイン） -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-2">依頼内容</h5>
+                        <div class="bg-light p-3">
+                            {{ $req->content }}
+                        </div>
+                    </div>
+
+                    <!-- 連絡先情報 -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-2">電話番号</h6>
+                            <div class="bg-light p-3">
+                                {{ $req->tel ?? '-' }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-2">メールアドレス</h6>
+                            <div class="bg-light p-3">
+                                {{ $req->email }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-2">希望納期</h6>
+                            <div class="bg-light p-3">
+                                {{ $req->due_date ? \Carbon\Carbon::parse($req->due_date)->format('Y年m月d日') : '-' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    @auth
+                        @php
+                            $isRequester = (int) $req->user_id === (int) auth()->id();     // 依頼者本人？
+                            $isRecipient = $req->post && (int) $req->post->user_id === (int) auth()->id(); // 受信者（投稿者）？
+                        @endphp
+
+                        <!-- 受信者はステータス更新 -->
+                        @if($isRecipient)
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3">ステータス更新</h6>
+                                <form method="POST" action="{{ route('requests.update', $req) }}" class="d-flex gap-3">
+                                    @csrf
+                                    @method('PUT')
+                                    <select name="status" class="form-select" style="width: auto;" required>
+                                        <option value="0" {{ $req->status == 0 ? 'selected' : '' }}>掲載中</option>
+                                        <option value="1" {{ $req->status == 1 ? 'selected' : '' }}>進行中</option>
+                                        <option value="2" {{ $req->status == 2 ? 'selected' : '' }}>完了</option>
+                                    </select>
+                                    <button class="btn btn-primary">更新</button>
+                                </form>
+                            </div>
+                        @endif
+
+                        <!-- 依頼者は編集/削除 -->
+                        @if($isRequester)
+                            <div class="d-flex gap-3">
+                                <a href="{{ route('requests.edit', $req) }}" class="btn btn-warning px-4">
+                                    依頼を編集
+                                </a>
+
+                                <form method="POST" action="{{ route('requests.destroy', $req) }}"
+                                    onsubmit="return confirm('本当に削除しますか？');" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-danger px-4">
+                                        依頼を削除
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    @endauth
+                </div>
             </div>
         </div>
-
-        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">戻る</a>
     </div>
+</div>
+
+{{-- 追加CSS --}}
+<style>
+    .badge {
+        font-size: 0.875rem;
+    }
+</style>
 @endsection

@@ -14,8 +14,8 @@ class JobRequest extends Model
         'tel',
         'email',
         'due_date',
-        'status',
         'del_flag'
+        // statusは削除 - 受信者による更新のみ許可
     ];
     protected $casts = [
         'status' => 'integer',
@@ -51,6 +51,12 @@ class JobRequest extends Model
     public function scopeAlive($q)
     {
         return $q->where('del_flag', 0);
+    }
+
+    // ステータス更新用のメソッド（受信者のみ使用）
+    public function updateStatus($status)
+    {
+        $this->update(['status' => $status]);
     }
 }
 

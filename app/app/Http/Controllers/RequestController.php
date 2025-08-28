@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\JobRequest;
 use App\Post;
 use Illuminate\Http\Request as HttpRequest;
+use App\Http\Requests\StoreRequestRequest;
+use App\Http\Requests\UpdateRequestRequest;
 
 class RequestController extends Controller
 {
@@ -30,11 +32,12 @@ class RequestController extends Controller
         return view('requests.create', compact('post'));
     }
 
-    public function store(HttpRequest $req)
+    public function store(StoreRequestRequest $request)
     {
-        $data = $this->validated($req);
+        $data = $request->validated();
         $data['user_id'] = auth()->id();
         $data['del_flag'] = 0;
+        $data['status'] = 0; // デフォルトで掲載中
 
         JobRequest::create($data);
         return redirect()->route('requests.index')->with('success', '依頼を送信しました');
@@ -57,17 +60,17 @@ class RequestController extends Controller
         return view('requests.edit', ['req' => $reqItem]);
     }
 
-    public function update(HttpRequest $req, JobRequest $reqItem)
+    public function update(UpdateRequestRequest $request, JobRequest $reqItem)
     {
         // 受信者（投稿者）によるステータス更新
-        if ($req->has('status')) {
+        if ($request->has('status')) {
             if ((int) $reqItem->post->user_id !== (int) auth()->id())
                 abort(403);
 
-            $data = $req->validate([
+            $data = $request->validate([
                 'status' => 'required|in:0,1,2',
             ]);
-            $reqItem->update($data);
+            $reqItem->updateStatus($data['status']);
 
             return redirect()->route('requests.show', $reqItem)->with('success', 'ステータスを更新しました');
         }
@@ -76,14 +79,7 @@ class RequestController extends Controller
         if ((int) $reqItem->user_id !== (int) auth()->id())
             abort(403);
 
-        $data = $req->validate([
-            'content' => 'required|string|max:2000',
-            'tel' => 'nullable|regex:/^[0-9]{10,15}$/',
-            'email' => 'required|email',
-            'due_date' => 'nullable|date|after:today',
-            // post_id, status, del_flag は編集させない
-        ]);
-
+        $data = $request->validated();
         $reqItem->update($data);
 
         return redirect()->route('requests.show', $reqItem)->with('success', '依頼内容を更新しました');
@@ -104,17 +100,5 @@ class RequestController extends Controller
         $reqItem->update(['del_flag' => 1]);
 
         return redirect()->route('requests.index')->with('success', '依頼を削除しました');
-    }
-
-    private function validated(HttpRequest $request)
-    {
-        return $request->validate([
-            'post_id' => 'required|exists:posts,id',
-            'content' => 'required|string|max:2000',
-            'tel' => 'nullable|regex:/^[0-9]{10,15}$/',
-            'email' => 'required|email',
-            'due_date' => 'nullable|date|after:today',
-            'status' => 'required|in:0,1,2',
-        ]);
     }
 }

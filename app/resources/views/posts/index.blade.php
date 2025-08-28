@@ -1,54 +1,128 @@
 @extends('layouts.app')
+
 @section('content')
-  <div class="container">
-    <h1>投稿一覧</h1>
+<div class="container py-4">
 
-    {{-- 検索フォーム --}}
-    <form method="GET" class="mb-3">
-      <div class="form-row">
-        <input class="form-control col mr-2" name="title" placeholder="タイトル" value="{{ request('title') }}">
-        <input class="form-control col mr-2" name="min" type="number" placeholder="最低金額" value="{{ request('min') }}">
-        <input class="form-control col mr-2" name="max" type="number" placeholder="最高金額" value="{{ request('max') }}">
-        <input class="form-control col mr-2" name="q" placeholder="フリーワード" value="{{ request('q') }}">
-        <button class="btn btn-primary col-auto">検索</button>
-      </div>
-    </form>
-
-    {{-- 投稿ボタン or ログイン案内 --}}
+  {{-- 見出しと新規投稿 --}}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 fw-bold mb-0">投稿一覧</h1>
     @auth
-      <a href="{{ route('posts.create') }}" class="btn btn-success mb-3">新規投稿</a>
+      <a href="{{ route('posts.create') }}" class="btn btn-success px-4">新規投稿</a>
     @else
-      <div class="alert alert-info mb-3">
+      <div class="alert alert-info mb-0 py-2 px-3">
         <a href="{{ route('login') }}" class="alert-link">ログイン</a>すると投稿ができます。
       </div>
     @endauth
+  </div>
 
-    {{-- 投稿一覧 --}}
-    @if($posts->count() > 0)
-      @foreach($posts as $post)
-        <div class="card mb-2">
-          <div class="card-body d-flex justify-content-between">
-            {{-- 画像があればサムネ表示 --}}
-            @if($post->image)
-              <img src="{{ asset('storage/' . $post->image) }}" alt="投稿画像" class="mr-3"
-                style="width:100px; height:100px; object-fit:cover;">
+  {{-- 検索フォーム --}}
+  <div class="card border mb-4">
+    <div class="card-body py-3">
+      <form method="GET" action="{{ route('posts.index') }}">
+        <div class="row g-3 align-items-end">
+
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">タイトル検索</label>
+            <input class="form-control" name="title" placeholder="タイトルを入力"
+                   value="{{ request('title') }}">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">最低金額</label>
+            <input class="form-control" type="number" name="min" placeholder="0"
+                   value="{{ request('min') }}">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">最高金額</label>
+            <input class="form-control" type="number" name="max" placeholder="100000"
+                   value="{{ request('max') }}">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">フリーワード</label>
+            <input class="form-control" name="q" placeholder="キーワードを入力"
+                   value="{{ request('q') }}">
+          </div>
+
+          <div class="col-md-2">
+            <button class="btn btn-primary px-4 w-100">検索</button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {{-- 投稿カードグリッド --}}
+  <div class="row g-4">
+    @forelse($posts as $post)
+      <div class="col-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 border hover-card">
+          {{-- サムネイル --}}
+          @if($post->image)
+            <img src="{{ asset('storage/' . $post->image) }}"
+                 alt="投稿画像"
+                 class="card-img-top object-fit-cover"
+                 style="height:180px;">
+          @else
+            <div class="bg-light" style="height:180px"></div>
+          @endif
+
+          <div class="card-body">
+            {{-- タイトル --}}
+            <h5 class="fw-bold text-truncate mb-2">
+              <a href="{{ route('posts.show', $post) }}" class="text-decoration-none text-dark">
+                {{ $post->title }}
+              </a>
+            </h5>
+
+            {{-- 概要（2行制限） --}}
+            <p class="text-muted mb-3 clamp-2">{{ Str::limit($post->content, 90) }}</p>
+
+            {{-- 金額（priceフィールドのみ） --}}
+            @if($post->price)
+              <div class="fw-semibold text-success mb-3">
+                ¥{{ number_format($post->price) }}
+              </div>
             @endif
 
-            <div>
-              <h5><a href="{{ route('posts.show', $post) }}">{{ $post->title }}</a></h5>
-              <p class="mb-0">{{ Str::limit($post->content, 100) }}</p>
+            {{-- 下部操作 --}}
+            <div class="d-flex justify-content-between align-items-center">
+              @include('partials.bookmark-button', ['post' => $post])
+              <a href="{{ route('posts.show', $post) }}" class="btn btn-outline-secondary">
+                詳細を見る
+              </a>
             </div>
-            @include('partials.bookmark-button', ['post' => $post])
           </div>
         </div>
-      @endforeach
-
-      {{-- ページネーション --}}
-      {{ $posts->links() }}
-    @else
-      <div class="alert alert-warning">
-        投稿がありません。
       </div>
-    @endif
+    @empty
+      <div class="col-12">
+        <div class="alert alert-warning text-center">投稿がありません。</div>
+      </div>
+    @endforelse
   </div>
+
+  {{-- ページネーション --}}
+  <div class="mt-4">
+    {{ $posts->links() }}
+  </div>
+</div>
+
+{{-- 追加CSSでソリッドな印象に調整 --}}
+<style>
+  .hover-card { 
+    transition: transform .15s ease, box-shadow .15s ease; 
+  }
+  .hover-card:hover { 
+    transform: translateY(-1px); 
+    box-shadow: 0 4px 12px rgba(0,0,0,.15)!important; 
+  }
+  .object-fit-cover { object-fit: cover; }
+  .clamp-2 {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
 @endsection

@@ -8,5 +8,5 @@
   data-post-id="{{ $post->id }}"
   data-bookmarked="{{ $bookmarked ? '1' : '0' }}"
 >
-  ★ ブックマーク <span class="js-bookmark-count">{{ $count }}</span>
+  ブックマーク <span class="js-bookmark-count">{{ $count }}</span>
 </button>
